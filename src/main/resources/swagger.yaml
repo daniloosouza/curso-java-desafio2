@@ -7,7 +7,7 @@ basePath: /management-bank-accounts
 schemes:
   - http
 paths:
-  /account:
+  /accounts:
     post:
       summary: Cria uma nova conta bancária
       consumes:
@@ -58,12 +58,24 @@ paths:
         500:
           description: Erro interno do servidor
     get:
+      summary: Retorna todas as contas bancárias
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Lista de contas bancárias
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Response'
+  /accounts/{accountId}:
+    get:
       summary: Retorna os dados de uma conta bancária
       produces:
         - application/json
       parameters:
-        - in: query
-          name: id
+        - in: path
+          name: accountId
           description: 'Id da conta bancária'
           required: true
           type: string
@@ -136,19 +148,6 @@ paths:
       responses:
         204:
           description: successful operation
-
-  /all-accounts:
-    get:
-      summary: Retorna todas as contas bancárias
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Lista de contas bancárias
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Response'
 
   /history:
     get:
