@@ -1,0 +1,287 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: Gerenciamento de Contas Bancárias
+  description: API para gerenciamento de contas por parte da instituição financeira
+basePath: /management-bank-accounts
+schemes:
+  - http
+paths:
+  /account:
+    post:
+      summary: Cria uma nova conta bancária
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: account
+          description: Dados da conta a ser criada
+          required: true
+          schema:
+            type: object
+            required:
+              - accountNumber
+              - accountAgency
+              - customerName
+              - accountBalance
+              - accountLimit
+              - accountType
+            properties:
+              accountNumber:
+                type: integer
+                format: int32
+                description: Número da conta
+              accountAgency:
+                type: integer
+                format: int32
+                description: Agência da conta
+              customerName:
+                type: string
+                description: Nome do cliente
+              accountBalance:
+                type: number
+                format: float
+                description: Saldo da conta
+              accountLimit:
+                type: number
+                format: float
+                description: Limite da conta
+              accountType:
+                type: string
+                enum: ["CONTA_CORRENTE", "CONTA_POUPANCA", "CONTA_SALARIO"]
+                description: Tipo da conta
+      responses:
+        201:
+          description: Conta criada com sucesso
+        400:
+          description: Requisição inválida
+        500:
+          description: Erro interno do servidor
+    get:
+      summary: Retorna os dados de uma conta bancária
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id
+          description: 'Id da conta bancária'
+          required: true
+          type: string
+      responses:
+        200:
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Response'
+
+  /bank-deposit:
+    patch:
+      summary: Realiza o depósito em uma conta bancária
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: account
+          description: Dados da conta que receberá o depósito
+          required: true
+          schema:
+            $ref: '#/definitions/Request'
+      responses:
+        204:
+          description: successful operation
+
+  /bank-draw:
+    patch:
+      summary: Realiza o saque em uma conta bancária
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: account
+          description: Dados da conta que fará o saque
+          required: true
+          schema:
+            $ref: '#/definitions/Request'
+      responses:
+        204:
+          description: successful operation
+
+  /change-limit:
+    patch:
+      summary: Realiza a alteração de limite da conta bancária
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: account
+          description: Dados da conta que terá o limite alterado
+          required: true
+          schema:
+            $ref: '#/definitions/Request'
+      responses:
+        204:
+          description: successful operation
+
+  /bank-wire:
+    patch:
+      summary: Realiza a transferência de valores entre contas bancárias
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: account
+          description: Dados da conta que terá o limite alterado
+          required: true
+          schema:
+            $ref: '#/definitions/RequestWire'
+      responses:
+        204:
+          description: successful operation
+
+  /all-accounts:
+    get:
+      summary: Retorna todas as contas bancárias
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Lista de contas bancárias
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Response'
+
+  /history:
+    get:
+      summary: Retorna o histórico de operações
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Histórico de operações
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ResponseHistory'
+
+definitions:
+  Request:
+    type: object
+    required:
+      - accountNumber
+      - accountAgency
+      - value
+    properties:
+      accountNumber:
+        type: integer
+        format: int32
+        description: Número da conta
+      accountAgency:
+        type: integer
+        format: int32
+        description: Agência da conta
+      value:
+        type: number
+        format: float
+        description: Valor do depósito
+  RequestWire:
+    type: object
+    required:
+      - accountOrigin
+      - accountDestiny
+      - value
+    properties:
+      accountOrigin:
+        type: object
+        description: Dados da conta de origem
+        required:
+          - accountNumber
+          - accountAgency
+        properties:
+          accountNumber:
+            type: integer
+            format: int32
+            description: Número da conta
+          accountAgency:
+            type: integer
+            format: int32
+            description: Agência da conta
+      accountDestiny:
+        type: object
+        description: Dados da conta de destino
+        required:
+          - accountNumber
+          - accountAgency
+        properties:
+          accountNumber:
+            type: integer
+            format: int32
+            description: Número da conta
+          accountAgency:
+            type: integer
+            format: int32
+            description: Agência da conta
+      value:
+        type: number
+        format: float
+        description: Valor do depósito
+  Response:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Id da conta
+      accountNumber:
+        type: integer
+        format: int32
+        description: Número da conta
+      accountAgency:
+        type: integer
+        format: int32
+        description: Agência da conta
+      customerName:
+        type: string
+        description: Nome do cliente
+      accountBalance:
+        type: number
+        format: float
+        description: Saldo da conta
+      accountLimit:
+        type: number
+        format: float
+        description: Limite da conta
+      accountType:
+        type: string
+        enum: ["CONTA_CORRENTE", "CONTA_POUPANCA", "CONTA_SALARIO"]
+        description: Tipo da conta
+  ResponseHistory:
+    type: object
+    properties:
+      Date:
+        type: string
+        description: Data da operação
+      Action:
+        type: string
+        description: Operação realizada
+      accountNumber:
+        type: integer
+        format: int32
+        description: Número da conta
+      accountAgency:
+        type: integer
+        format: int32
+        description: Agência da conta
+      customerName:
+        type: string
+        description: Nome do cliente
+      operationValue:
+        type: number
+        format: float
+        description: Valor da operação
+      accountBalance:
+        type: number
+        format: float
+        description: Saldo da conta
+      accountType:
+        type: string
+        enum: ["CONTA_CORRENTE", "CONTA_POUPANCA", "CONTA_SALARIO"]
+        description: Tipo da conta
