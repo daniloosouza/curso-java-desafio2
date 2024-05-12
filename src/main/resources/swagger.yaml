@@ -85,7 +85,7 @@ paths:
           schema:
             $ref: '#/definitions/Response'
 
-  /bank-deposit:
+  /accounts/bank-deposit:
     patch:
       summary: Realiza o depósito em uma conta bancária
       consumes:
@@ -101,7 +101,7 @@ paths:
         204:
           description: successful operation
 
-  /bank-draw:
+  /accounts/bank-draw:
     patch:
       summary: Realiza o saque em uma conta bancária
       consumes:
@@ -117,7 +117,7 @@ paths:
         204:
           description: successful operation
 
-  /change-limit:
+  /accounts/change-limit:
     patch:
       summary: Realiza a alteração de limite da conta bancária
       consumes:
@@ -133,7 +133,7 @@ paths:
         204:
           description: successful operation
 
-  /bank-wire:
+  /accounts/bank-wire:
     patch:
       summary: Realiza a transferência de valores entre contas bancárias
       consumes:
@@ -149,7 +149,7 @@ paths:
         204:
           description: successful operation
 
-  /history:
+  /accounts/history:
     get:
       summary: Retorna o histórico de operações
       produces:
