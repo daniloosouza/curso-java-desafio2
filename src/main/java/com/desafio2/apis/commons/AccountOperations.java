@@ -1,11 +1,13 @@
 package com.desafio2.apis.commons;
 
 import com.desafio2.apis.domain.Account;
+import com.desafio2.apis.domain.History;
 import com.desafio2.apis.repository.AccountRepository;
 import com.desafio2.apis.services.exceptions.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -41,6 +43,11 @@ public class AccountOperations {
         } else {
             return account;
         }
+    }
+
+    public History buildHistoryData(Account account, String action, Double value){
+        return new History(null, LocalDateTime.now(), action, account.getAccountNumber(), account.getAccountAgency(), account.getCustomerName(),
+                           value, account.getAccountBalance(), account.getAccountType());
     }
 
 }
