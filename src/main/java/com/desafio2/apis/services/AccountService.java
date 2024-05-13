@@ -39,7 +39,11 @@ public class AccountService {
     }
 
     public Account insert(Account obj) {
-        return repo.insert(obj);
+        Account ac = repo.insert(obj);
+
+        History history = ops.buildHistoryData(obj, "Cadastro", obj.getAccountBalance());
+        histRepo.save(history);
+        return ac;
     }
 
     public Account fromDTO(AccountDTO objDto) {
@@ -65,6 +69,9 @@ public class AccountService {
         }
         account.setAccountBalance(account.getAccountBalance() + objDTO.getValue());
         repo.save(account);
+
+        History history = ops.buildHistoryData(account, "Depósito", objDTO.getValue());
+        histRepo.save(history);
     }
 
     public void bankDraw(ObjValuesDTO objDTO) {
@@ -92,7 +99,9 @@ public class AccountService {
             account.setAccountBalance(account.getAccountBalance() - drawValue);
             account.setAccountLimit(account.getAccountLimit() - drawValue);
             repo.save(account);
-            //buildHistoryData.addHistoryData(obj, "Saque", drawValue);
+
+            History history = ops.buildHistoryData(account, "Saque", drawValue);
+            histRepo.save(history);
         }
     }
 
@@ -139,8 +148,10 @@ public class AccountService {
             accountDestiny.setAccountBalance(accountDestiny.getAccountBalance() + wireValue);
             repo.save(accountOrigin);
             repo.save(accountDestiny);
-//            buildHistoryData.addHistoryData(obj, "Transferência - Origem", wireValue);
-//            buildHistoryData.addHistoryData(obj, "Transferência - Destino", wireValue);
+            History historyOrigin = ops.buildHistoryData(accountOrigin, "Transferência - Origem", wireValue);
+            History historyDestino = ops.buildHistoryData(accountOrigin, "Transferência - Destino", wireValue);
+            histRepo.save(historyOrigin);
+            histRepo.save(historyDestino);
         }
 
     }
