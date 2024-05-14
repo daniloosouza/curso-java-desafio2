@@ -7,6 +7,7 @@ import com.desafio2.apis.dto.BankWireDTO;
 import com.desafio2.apis.dto.HistoryDTO;
 import com.desafio2.apis.dto.ObjValuesDTO;
 import com.desafio2.apis.services.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class AccountResource {
     }
 
     @RequestMapping(method=RequestMethod.POST)
-    public ResponseEntity<Void> insert(@RequestBody AccountDTO objDto) {
+    public ResponseEntity<Void> insert(@RequestBody @Valid AccountDTO objDto) {
         Account obj = service.fromDTO(objDto);
         obj = service.insert(obj);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(obj.getId()).toUri();
@@ -45,25 +46,25 @@ public class AccountResource {
     }
 
     @RequestMapping(value = "/bank-deposit", method=RequestMethod.PATCH)
-    public ResponseEntity<Void> bankDeposit(@RequestBody ObjValuesDTO objDto) {
+    public ResponseEntity<Void> bankDeposit(@RequestBody @Valid ObjValuesDTO objDto) {
         service.bankDeposit(objDto);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(value = "/bank-draw", method=RequestMethod.PATCH)
-    public ResponseEntity<Void> bankDraw(@RequestBody ObjValuesDTO objDto) {
+    public ResponseEntity<Void> bankDraw(@RequestBody @Valid ObjValuesDTO objDto) {
         service.bankDraw(objDto);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(value = "/change-limit", method=RequestMethod.PATCH)
-    public ResponseEntity<Void> changeLimit(@RequestBody ObjValuesDTO objDto) {
+    public ResponseEntity<Void> changeLimit(@RequestBody @Valid ObjValuesDTO objDto) {
         service.changeLimit(objDto);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(value = "/bank-wire", method=RequestMethod.PATCH)
-    public ResponseEntity<Void> bankWire(@RequestBody BankWireDTO bwDTO) {
+    public ResponseEntity<Void> bankWire(@RequestBody @Valid BankWireDTO bwDTO) {
         service.bankWire(bwDTO);
         return ResponseEntity.noContent().build();
     }

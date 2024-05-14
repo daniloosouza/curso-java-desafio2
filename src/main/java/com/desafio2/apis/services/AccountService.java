@@ -9,8 +9,8 @@ import com.desafio2.apis.dto.BankWireDTO;
 import com.desafio2.apis.dto.ObjValuesDTO;
 import com.desafio2.apis.repository.AccountRepository;
 import com.desafio2.apis.repository.HistoryRepository;
+import com.desafio2.apis.services.exceptions.AccountManagementException;
 import com.desafio2.apis.services.exceptions.ObjectNotFoundException;
-import org.apache.tomcat.util.collections.CaseInsensitiveKeyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,10 +39,12 @@ public class AccountService {
     }
 
     public Account insert(Account obj) {
+        ops.verifyAccount(obj.getAccountNumber(), obj.getAccountAgency(), false);
         Account ac = repo.insert(obj);
 
         History history = ops.buildHistoryData(obj, "Cadastro", obj.getAccountBalance());
         histRepo.save(history);
+        System.out.printf("Conta criada:: %s", ac.toString());
         return ac;
     }
 
@@ -57,18 +59,17 @@ public class AccountService {
         if (account == null) {
           throw new ObjectNotFoundException("Objeto não encontrado");
         }
+        System.out.printf("Conta encontrada:: %s", account.toString());
         return account;
     }
 
     public void bankDeposit(ObjValuesDTO objDTO) {
         ops.valueIsValid(objDTO.getValue());
 
-        Account account = repo.findAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency());
-        if (account == null) {
-            throw new ObjectNotFoundException("Objeto não encontrado");
-        }
+        Account account = ops.verifyAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency(), true);
         account.setAccountBalance(account.getAccountBalance() + objDTO.getValue());
         repo.save(account);
+        System.out.printf("Depósito efetuado:: %s", account.toString());
 
         History history = ops.buildHistoryData(account, "Depósito", objDTO.getValue());
         histRepo.save(history);
@@ -78,52 +79,41 @@ public class AccountService {
         Double drawValue = objDTO.getValue();
         ops.valueIsValid(drawValue);
 
-        Account account = repo.findAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency());
-        if (account == null) {
-            throw new ObjectNotFoundException("Objeto não encontrado");
-        }
+        Account account = ops.verifyAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency(), true);
 
         boolean validatedWire = wireTimeRule.validatedWire(drawValue);
         if (drawValue > account.getAccountBalance()) {
-            //throw new AccountManagementException("A conta informada não possui saldo suficiente!");
-            throw new ObjectNotFoundException("A conta informada não possui saldo suficiente!");
+            throw new AccountManagementException("A conta informada não possui saldo suficiente!");
         } else if (drawValue > account.getAccountLimit()) {
-            //throw new AccountManagementException("O valor informado é maior que o limite de transação disponível!");
-            throw new ObjectNotFoundException("O valor informado é maior que o limite de transação disponível!");
+            throw new AccountManagementException("O valor informado é maior que o limite de transação disponível!");
         } else if (!validatedWire) {
-//            throw new AccountManagementException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
-//                                                         wireTimeRule.getEndLimit().toString() + "h excedido!");
-            throw new ObjectNotFoundException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
+            throw new AccountManagementException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
                                                          wireTimeRule.getEndLimit().toString() + "h excedido!");
         } else {
             account.setAccountBalance(account.getAccountBalance() - drawValue);
             account.setAccountLimit(account.getAccountLimit() - drawValue);
             repo.save(account);
+            System.out.printf("Saque efetuado:: %s", account.toString());
 
             History history = ops.buildHistoryData(account, "Saque", drawValue);
             histRepo.save(history);
         }
     }
 
-    public void changeLimit(ObjValuesDTO objDTO) {
+    public void changeLimit(ObjValuesDTO objDTO)  {
         Double value = objDTO.getValue();
         ops.valueIsValid(value);
         Account account = ops.verifyAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency(), true);
 
-//        Account account = repo.findAccount(objDTO.getAccountNumber(), objDTO.getAccountAgency());
-//        if (account == null) {
-//            throw new ObjectNotFoundException("Objeto não encontrado");
-//        }
         account.setAccountLimit(value);
         repo.save(account);
+        System.out.printf("Limite alterado:: %s", account.toString());
 
         History history = ops.buildHistoryData(account, "Alteração de Limite", value);
         histRepo.save(history);
     }
 
     public void bankWire(BankWireDTO bwDTO) {
-        boolean accountOriginExists = false;
-        boolean accountDestinyExists = false;
         Double wireValue = bwDTO.getValue();
         boolean validatedWire = wireTimeRule.validatedWire(wireValue);
         ops.valueIsValid(wireValue);
@@ -132,22 +122,20 @@ public class AccountService {
         Account accountDestiny = ops.verifyAccount(bwDTO.getAccountDestiny().getAccountNumber(), bwDTO.getAccountDestiny().getAccountAgency(), true);
 
         if (accountOrigin.getAccountBalance() < wireValue) {
-//            throw new AccountManagementException("Saldo insuficiente para realizar a transferência bancária!");
-            throw new ObjectNotFoundException("Saldo insuficiente para realizar a transferência bancária!");
+            throw new AccountManagementException("Saldo insuficiente para realizar a transferência bancária!");
         } else if (accountOrigin.getAccountLimit() < wireValue) {
-//            throw new AccountManagementException("Limite de transações diárias excedido!");
-            throw new ObjectNotFoundException("Limite de transações diárias excedido!");
+            throw new AccountManagementException("Limite de transações diárias excedido!");
         } else if(!validatedWire){
-//            throw new AccountManagementException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
-//                                                         wireTimeRule.getEndLimit().toString() + "h excedido!");
-            throw new ObjectNotFoundException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
+            throw new AccountManagementException("Limite de transações entre " + wireTimeRule.getInitLimit().toString() + "h e " +
                                                          wireTimeRule.getEndLimit().toString() + "h excedido!");
         } else {
             accountOrigin.setAccountBalance(accountOrigin.getAccountBalance() - wireValue);
             accountOrigin.setAccountLimit(accountOrigin.getAccountLimit() - wireValue);
             accountDestiny.setAccountBalance(accountDestiny.getAccountBalance() + wireValue);
             repo.save(accountOrigin);
+            System.out.printf("Transferência Origem:: %s", accountOrigin.toString());
             repo.save(accountDestiny);
+            System.out.printf("Transferência Destino:: %s", accountDestiny.toString());
             History historyOrigin = ops.buildHistoryData(accountOrigin, "Transferência - Origem", wireValue);
             History historyDestino = ops.buildHistoryData(accountOrigin, "Transferência - Destino", wireValue);
             histRepo.save(historyOrigin);
